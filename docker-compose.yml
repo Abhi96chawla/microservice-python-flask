@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=*****
+      - DB_USER=*****
+      - DB_PASSWORD=*****
+      - DB_NAME=m*****
+      - PORT=8080
+      - GCP_BUCKET_NAME=*****
+      - GOOGLE_APPLICATION_CREDENTIALS=*****
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    environment:
+      - API_URL=http://backend:8080
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

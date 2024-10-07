@@ -1,0 +1,8 @@
+Flask==2.0.1
+Flask-CORS==3.0.10
+mysql-connector-python==8.0.26
+google-cloud-storage==2.10.0
+Werkzeug==2.3.7   # Upgrade Werkzeug to a compatible version
+flask_cors==3.0.10
+flask-mysqldb==1.0.1
+mysqlclient==2.1.1

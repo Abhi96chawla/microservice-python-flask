@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management and File Upload</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1, h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        form {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        li {
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-upload {
+            background-color: var(--secondary-color);
+        }
+        
+        .file-upload:hover {
+            background-color: #27ae60;
+        }
+        
+        #uploadStatus {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>User Management and File Upload</h1>
+        
+        <form id="userForm">
+            <h2>Add User</h2>
+            <input type="text" id="name" placeholder="Name" required>
+            <input type="number" id="age" placeholder="Age" required>
+            <button type="submit">Add User</button>
+        </form>
+
+        <form id="fileUploadForm">
+            <h2>File Upload</h2>
+            <input type="file" id="fileInput" required>
+            <button type="submit" class="file-upload">Upload File</button>
+            <div id="uploadStatus"></div>
+        </form>
+
+        <h2>User List</h2>
+        <ul id="userList"></ul>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080';  // This will be replaced by the env.sh script
+
+        async function insertUser(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+
+            try {
+                const response = await fetch(`${API_URL}/insert`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, age: parseInt(age) }),
+                });
+
+                if (response.ok) {
+                    document.getElementById('userForm').reset();
+                    fetchUsers();
+                } else {
+                    console.error('Error inserting user');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch(`${API_URL}/list`);
+                const users = await response.json();
+                const userList = document.getElementById('userList');
+                userList.innerHTML = '';
+                users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.textContent = `${user.name} - ${user.age} years old`;
+                    userList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function uploadFile(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const uploadStatus = document.getElementById('uploadStatus');
+            
+            if (!file) {
+                uploadStatus.textContent = 'Please select a file to upload';
+                uploadStatus.style.color = 'red';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                uploadStatus.textContent = 'Uploading...';
+                uploadStatus.style.color = 'blue';
+                
+                const response = await fetch(`${API_URL}/upload`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    uploadStatus.textContent = `File uploaded successfully. URL: ${result.url}`;
+                    uploadStatus.style.color = 'green';
+                    document.getElementById('fileUploadForm').reset();
+                } else {
+                    uploadStatus.textContent = 'Error uploading file';
+                    uploadStatus.style.color = 'red';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                uploadStatus.textContent = 'Error uploading file';
+                uploadStatus.style.color = 'red';
+            }
+        }
+
+        document.getElementById('userForm').addEventListener('submit', insertUser);
+        document.getElementById('fileUploadForm').addEventListener('submit', uploadFile);
+        fetchUsers();
+    </script>
+</body>
+</html>
